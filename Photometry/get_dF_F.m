@@ -1,10 +1,10 @@
 %% Parameters
-params.dsRate = 100; % Downsampling rate if you want to downsample the signal
+params.dsRate = 20; % Downsampling rate if you want to downsample the signal
 %This dsRate will also be applied to all signals during the analysis
 %pipeline
 
 % Filter Parameters
-params.FP.lpCut = 10; % Cut-off frequency for filter
+params.FP.lpCut = 20; % Cut-off frequency for filter
 params.FP.filtOrder = 8; % Order of the filter
 
 % Baseline Parameters
@@ -25,11 +25,11 @@ params.FP.sigEdge = 15; %Time in seconds of data to be removed from beginning an
 params.FP.modFreq = [319 217];
 
 %%
-addpath(genpath('/Users/mac/Projects/vandermeerlab/code-matlab/shared'));
-addpath(genpath('/Users/mac/Projects/replay_DA/analysis/photometry'));
+addpath(genpath('/Users/mac/Projects/nsb2021/code-matlab/shared'));
+addpath(genpath('/Users/mac/Projects/nsb2021/photometry'));
 
 %% Load Neuralynx CSC photometry data
-cfg.fc = {'CSC30.ncs'};
+cfg.fc = {'CSC33.ncs'};
 csc_photo = LoadCSC(cfg);
 
 FP_data = [];
@@ -37,29 +37,10 @@ FP_data.acq.Fs = csc_photo.cfg.hdr{1}.SamplingFrequency;
 FP_data.acq.time = csc_photo.tvec - csc_photo.tvec(1);
 FP_data.acq.FP{1} = csc_photo.data';
 
-%% Load Neuralynx CSC excitation/isosbestic references
-cfg.fc = {'CSC32.ncs'}; % 470
-csc_ref470 = LoadCSC(cfg);
-
-FP_data.acq.refSig{1} = csc_ref470.data';
-
-cfg.fc = {'CSC31.ncs'}; % 405
-csc_ref405 = LoadCSC(cfg);
-
-FP_data.acq.refSig{2} = csc_ref405.data';
-
 %% Process data recorded in CW mode
 FP_data = processFP(params, FP_data);
 
 FP = tsd(FP_data.final.time', FP_data.final.FP{1}', 'FP');
-
-%% Process data recorded in FREQ_MOD mode
-FP_data = processIso(params, FP_data);
-
-FP = tsd(FP_data.final.time', FP_data.final.FP{1}', 'FP');
-
-excDemod = tsd(FP_data.final.time', FP_data.final.nbFP{1}', 'excDemod');
-isoDemod = tsd(FP_data.final.time', FP_data.final.iso{1}', 'isoDemod');
 
 %% Load events
 LoadExpKeys();
