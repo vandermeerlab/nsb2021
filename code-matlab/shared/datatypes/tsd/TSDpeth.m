@@ -93,8 +93,14 @@ switch cfg.mode
         start_idx = nearest_idx3(this_iv.tstart,tsd_in.tvec);
         end_idx = nearest_idx3(this_iv.tend,tsd_in.tvec);
         
-        if length(unique(end_idx-start_idx)) ~= 1 % unequal length trials
-           error('Raw mode requires equal tsd samples for each trial.');
+        if length(unique(end_idx-start_idx)) ~= 1 % unequal length trials - attempt to fix
+           diffs = end_idx - start_idx;
+           good_diff = mode(diffs);
+           keep = diffs == good_diff;
+           start_idx = start_idx(keep); end_idx = end_idx(keep);
+           nT = length(start_idx);
+           
+           warning(sprintf('%d trials discarded because of unequal samples.', length(diffs)-sum(keep)));
         end
         
         for iT = nT:-1:1 % slow! could be vectorized
