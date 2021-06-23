@@ -33,8 +33,8 @@ else
             
             this_t = getd(evt, num2str(iL)); n_t = length(this_t);
             
-            all_trial_start = cat(1, all_trial_start, this_t);
-            all_trial_id = cat(1, all_trial_id, repmat(iL, [n_t 1]));
+            all_trial_start = cat(2, all_trial_start, this_t);
+            all_trial_id = cat(2, all_trial_id, repmat(iL, [1 n_t]));
             
         end
         
@@ -53,11 +53,13 @@ if length(all_trial_start) > length(all_trial_end) % count back from trial ends
     for iT = 1:length(all_trial_end)
        temp.t = all_trial_start;
        if ~isempty(FindFieldTime(cfg_prev,temp,all_trial_end(iT)))
-           [trial_start(iT), idx] = FindFieldTime(cfg_prev,temp,all_trial_end(iT));
+           trial_start(iT) = FindFieldTime(cfg_prev,temp,all_trial_end(iT));
+           trial_start_idx = find(all_trial_start == trial_start(iT)); % idx of identified start
+           trial_id(iT) = all_trial_id(trial_start_idx);
        else
            error(sprintf('Trial end %d has no corresponding start', iT));
        end
-       trial_id(iT) = all_trial_id(idx);
+       
     end
     trial_end = all_trial_end;
 elseif length(all_trial_start) < length(all_trial_end) % count fwd from trial starts
