@@ -131,5 +131,9 @@ end
 
 % average and package
 out = tsd;
-out.data = nanmean(out_data);
+if nT > 1
+    out.data = nanmean(out_data);
+else
+    out.data = out_data;
+end
 out.tvec = out_tvec;
