@@ -32,6 +32,6 @@ while line ~= -1
 end
 
 tvec = tvec(1:frame_no-1);
-tvec = tvec*1e-10; % this may be wrong
+tvec = tvec*1e-6; % for nsb2021 unix timestamps
 
 fprintf('%d frames loaded.\n', frame_no);
