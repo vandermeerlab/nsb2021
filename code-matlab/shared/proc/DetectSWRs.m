@@ -19,6 +19,8 @@ cfg_def = [];
 cfg_def.f = [140 220];
 cfg_def.thr1 = 5; % SDs above mean for SWR to be included
 cfg_def.thr2 = 3; % SDs above mean for start and end time detection
+cfg_def.thr1_artif = 3;
+cfg_def.thr2_artif = 1;
 
 cfg_master = ProcessConfig(cfg_def, cfg_in);
 
@@ -53,7 +55,7 @@ SWR_evt = TSDtoIV(cfg,csc_yesPz);
 %% to each event, add a field with the max z-scored power (for later selection)
 cfg = [];
 cfg.method = 'max'; % 'min', 'mean'
-cfg.label = 'maxSWRp'; % what to call this in iv, i.e. usr.label
+cfg.label = 'max'; % what to call this in iv, i.e. usr.label
  
 SWR_evt = AddTSDtoIV(cfg, SWR_evt, csc_yesPz);
  
@@ -62,11 +64,15 @@ cfg = [];
 cfg.operation = '>';
 cfg.threshold = cfg_master.thr1;
  
-SWR_evt = SelectIV(cfg, SWR_evt, 'maxSWRp');
+SWR_evt = SelectIV(cfg, SWR_evt, 'max');
 
 %% 
+
+cfg_artif = cfg_master;
+cfg_artif.thr1 = cfg_artif.thr1_artif;
+cfg_artif.thr2 = cfg_artif.thr2_artif;
+
 if exist('csc_no', 'var') % "veto" csc
-    
-    noSWR_evt = DetectSWRs(cfg_master, csc_no); 
+    noSWR_evt = DetectSWRs(cfg_artif, csc_no); 
     SWR_evt = DifferenceIV([], SWR_evt, noSWR_evt);
 end
