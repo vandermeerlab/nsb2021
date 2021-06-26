@@ -46,6 +46,14 @@ end
 iv1.tstart = iv1.tstart(logical(keep));
 iv1.tend = iv1.tend(logical(keep));
 
+% also select data from other same-length usr fields
+if isfield(iv1,'usr') && ~isempty(iv1.usr)
+    ivfields = fieldnames(iv1.usr);
+    for iField = 1:length(ivfields)
+        iv1.usr.(ivfields{iField}) = iv1.usr.(ivfields{iField})(logical(keep));
+    end
+end
+
 % housekeeping
 iv1.cfg.history.mfun = cat(1,iv1.cfg.history.mfun,mfun);
 iv1.cfg.history.cfg = cat(1,iv1.cfg.history.cfg,{cfg});

@@ -44,6 +44,7 @@ cfg_def = [];
 cfg_def.window = [-2 2]; % start and end times of window (in s)
 cfg_def.dt = []; % time step, specify this for 'interp' mode
 cfg_def.mode = 'raw'; % 'raw' or 'interp'; if 'interp', need to specify cfg_def.dt
+cfg_def.normalize = []; % if specified, normalize each event trace to [start end] window, e.g. [-2 0]
 cfg_def.interp_mode = 'linear';
 
 cfg = ProcessConfig2(cfg_def,cfg_in);
@@ -58,6 +59,10 @@ end
 
 if ~isfield(t_in,'type') % assume raw times
     this_iv = iv(t_in + cfg.window(1), t_in + cfg.window(2));
+    
+    if ~isempty(cfg.normalize)
+       norm_iv = iv(t_in + cfg.normalize(1), t_in + cfg.normalize(2)); 
+    end
 else
     switch t_in.type
         case 'iv'
@@ -75,6 +80,9 @@ else
             end
             
             this_iv = iv(t_in.t{1} + cfg.window(1), t_in.t{1} + cfg_window(2));
+            if ~isempty(cfg.normalize)
+                norm_iv = iv(t_in.t{1} + cfg.normalize(1), t_in.t{1} + cfg.normalize(2));
+            end
             
         otherwise
             
@@ -93,6 +101,11 @@ switch cfg.mode
         start_idx = nearest_idx3(this_iv.tstart,tsd_in.tvec);
         end_idx = nearest_idx3(this_iv.tend,tsd_in.tvec);
         
+        if ~isempty(cfg.normalize)
+           norm_start_idx = nearest_idx3(norm_iv.tstart,tsd_in.tvec);
+           norm_end_idx = nearest_idx3(norm_iv.tend,tsd_in.tvec);
+        end
+        
         if length(unique(end_idx-start_idx)) ~= 1 % unequal length trials - attempt to fix
            diffs = end_idx - start_idx;
            good_diff = mode(diffs);
@@ -107,6 +120,11 @@ switch cfg.mode
         
             out_data(iT,:) = tsd_in.data(start_idx(iT):end_idx(iT)); % need to generalize to 2-D
             
+            if ~isempty(cfg.normalize)
+               norm_factor = nanmean(tsd_in.data(norm_start_idx(iT):norm_end_idx(iT)));
+               out_data(iT,:) = out_data(iT,:) ./ norm_factor;
+            end
+            
         end
         out_tvec = tsd_in.tvec(start_idx(1):end_idx(1));
         out_tvec = out_tvec-nanmean(out_tvec); % this is an approximation -- depends on exact spacing of input tsd
@@ -115,6 +133,10 @@ switch cfg.mode
         
         if isempty(cfg.dt)
             error('interp mode requires cfg.dt to be specified.');
+        end
+        
+        if ~isempty(cfg.normalize)
+            error('Normalization is not yet implemented in interp mode.');
         end
         
         for iT = nT:-1:1 % slow! should be vectorized to do one interp1 first, then reshape
